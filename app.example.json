@@ -1,0 +1,55 @@
+{
+  "apps" : [
+    {
+      "name"      : "www",
+      "script"    : "./bin/www",
+      "env": {
+      },
+      "env": {
+        "PORT": "8080"
+      },
+      "env_production" : {
+        "NODE_ENV": "production",
+        "PORT": "80"
+      }
+    },
+    {
+      "name": "worker",
+      "script"    : "./bin/worker",
+      "env": {
+      },
+      "env_production" : {
+        "NODE_ENV": "production"
+      }
+    },
+    {
+      "name": "legacy_import",
+      "script": "./bin/legacy_import",
+      "cron_restart": "0 * * * *",
+      "env_production" : {
+        "NODE_ENV": "production"
+      }
+    }
+  ],
+
+  "deploy" : {
+    "production" : {
+      "key": "/server/key",
+      "user": "ec2-user",
+      "host": "api.projek.asia",
+      "ref": "origin/master",
+      "repo": "git@git.andybas.com:project-asia/api.git",
+      "path": "/home/ec2-user/www/api",
+      "post-deploy" : "nvm use ; npm install ; npm run sequelize --db:migrate --env production ; pm2 startOrRestart app.json --env production"
+    },
+    "staging" : {
+      "key": "/server/key",
+      "user": "ec2-user",
+      "host": "dev.projek.asia",
+      "ref": "origin/master",
+      "repo": "git@git.andybas.com:project-asia/api.git",
+      "path": "/home/ec2-user/www/api",
+      "post-deploy" : "nvm use ; npm install ; npm run sequelize --db:migrate ; pm2 startOrRestart app.json"
+    }
+  }
+}

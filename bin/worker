@@ -1,0 +1,34 @@
+#!/usr/bin/env node
+
+require("babel-core/register");
+require('../lib/load-env');
+
+const config = require('../lib/App/config');
+const Logger = require('../lib/Logger').default;
+const App = require('../lib/App').default;
+
+const logger = Logger({name: 'www', component: 'Worker'});
+logger.info('Starting up...');
+
+const app = App({logger});
+
+process.on('SIGTERM', shutdown);
+
+app.on('lost', function() {
+  logger.info('Worker connection lost, shutting down...');
+  shutdown();
+});
+
+app.once('ready', function() {
+  logger.info('Worker instance ready, starting work...');
+  beginWork();
+});
+
+function beginWork() {
+  app.worker.consumeAllQueues();
+}
+
+function shutdown() {
+  logger.info('Shutting down worker...');
+  process.exit();
+}

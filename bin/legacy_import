@@ -1,0 +1,4 @@
+#!/usr/bin/env node
+
+require('shelljs/global');
+exec("node legacy_import users");

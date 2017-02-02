@@ -1,0 +1,50 @@
+#!/usr/bin/env node
+
+require("babel-core/register")({
+	retainLines: true
+});
+
+require('../lib/load-env');
+
+const http = require('http');
+const config = require('../lib/Server/config').default
+const Logger = require('../lib/Logger').default;
+const App = require('../lib/App').default;
+const Server = require('../lib/Server').default;
+
+const logger = Logger({name: 'www', component: 'Server'});
+const appLogger = logger.child({component: 'App'});
+
+logger.info('Starting up...');
+
+const PORT = config.port;
+const app = App({logger: appLogger});
+const server = http.createServer(Server({logger, app}));
+
+process.on('SIGTERM', shutdown);
+
+app.on('lost', function() {
+	logger.info('App connection lost, shutting down...');
+	shutdown();
+});
+
+app.once('ready', function() {
+	logger.info('App instance ready, starting server...');
+	listen();
+});
+
+function listen() {
+	server.listen(PORT, onListen);
+}
+
+function onListen() {
+	logger.info('Server started and listening on port %s', PORT);
+}
+
+function shutdown() {
+	logger.info('Shutting down server...');
+	server.close(function() {
+		logger.info('Server successfully shut down');
+		process.exit();
+	});
+}
